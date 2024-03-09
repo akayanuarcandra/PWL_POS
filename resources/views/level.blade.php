@@ -16,7 +16,7 @@
         <td>{{$d->level_kode}}</td>
         <td>{{$d->level_nama}}</td>
     </tr>
-    @endforeach 
+    @endforeach
 </table>
 </body>
 </html>
