@@ -18,5 +18,6 @@
         <td>{{$d->nama}}</td>
         <td>{{$d->level_id}}</td>
     </tr>
+    @endforeach
 </body>
 </html>
