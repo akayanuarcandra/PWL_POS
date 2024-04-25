@@ -2,57 +2,151 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LevelModel;
 use App\Models\UserModel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Yajra\DataTables\DataTables;
 
 class UserController extends Controller
 {
     public function index()
     {
-        $user = UserModel::with('level')->get();
-        return view('user', ['data' => $user]);
-    }
-
-    public function tambah()
-    {
-        return view('user_tambah');
-    }
-
-    public function tambah_simpan(Request $request)
-    {
-        UserModel::create([
-            'username' => $request -> username,
-            'nama' => $request -> nama,
-            'password' => Hash::make($request -> password),
-            'level_id' => $request -> level_id
+        $breadcrumb = (object)[
+            'title' => 'Daftar User',
+            'list' => ['Home', 'User']
+        ];
+        $page = (object)[
+            'title' => 'Daftar user yang terdaftar dalam sistem',
+        ];
+        $activeMenu = 'user';
+        $levels = LevelModel::all();
+        return view('user.index', [
+            'breadcrumb' => $breadcrumb,
+            'activeMenu' => $activeMenu,
+            'page' => $page,
+            'levels' => $levels
         ]);
-        return redirect('/user');
     }
 
-    public function ubah($id)
+    public function list(Request $request)
+    {
+        $users = UserModel::select('user_id', 'username', 'level_id')->with('level')->get();
+
+        // filter by level_id
+        if ($request->level_id) {
+            $users = $users->where('level_id', $request->level_id);
+        }
+
+        return DataTables::of($users)->addIndexColumn()->addColumn('action', function ($user) {
+            $btn = '<a href="/user/' . $user->user_id . '" class="btn btn-primary btn-sm">Detail</a>';
+            $btn = $btn . ' <a href="/user/' . $user->user_id . '/edit" class="btn btn-warning btn-sm">Edit</a>';
+            $btn .= '<form class="d-inline-block" method="POST" action="' .
+                url('/user/' . $user->user_id) . '>' . csrf_field() . method_field('DELETE') .
+                '<button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure to delete this data?\');" >Delete</button></form>';
+            return $btn;
+        })
+            ->rawColumns(['action'])
+            ->make();
+    }
+
+    public function create()
+    {
+        $breadcrumb = (object)[
+            'title' => 'Tambah User',
+            'list' => ['Home', 'User', 'Tambah']
+        ];
+        $page = (object)[
+            'title' => 'Tambah user baru',
+        ];
+        $activeMenu = 'user';
+        $level = LevelModel::all();
+
+        return view('user.create', ['breadcrumb' => $breadcrumb, 'activeMenu' => $activeMenu, 'page' => $page, 'level' => $level]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string|min:3|unique:m_user,username',
+            'email' => 'required|string|max:100',
+            'password' => 'required|min:5',
+            'level_id' => 'required|integer',
+        ]);
+
+        UserModel::create([
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+            'level_id' => $request->level_id,
+        ]);
+
+        return redirect('/user')->with('success', 'User created successfully.');
+    }
+
+    public function show(string $id)
+    {
+        $user = UserModel::with('level')->find($id);
+        $breadcrumb = (object)[
+            'title' => 'Detail User',
+            'list' => ['Home', 'User', 'Detail']
+        ];
+        $page = (object)[
+            'title' => 'Detail user',
+        ];
+        $activeMenu = 'user';
+        return view('user.show', ['breadcrumb' => $breadcrumb, 'activeMenu' => $activeMenu, 'page' => $page, 'user' => $user]);
+    }
+
+    public function edit(string $id)
     {
         $user = UserModel::find($id);
-        return view('user_ubah', ['data' => $user]);
+        $level = LevelModel::all();
+
+        $breadcrumb = (object)[
+            'title' => 'Edit User',
+            'list' => ['Home', 'User', 'Edit']
+        ];
+        $page = (object)[
+            'title' => 'Edit user',
+        ];
+        $activeMenu = 'user';
+        return view('user.edit', ['breadcrumb' => $breadcrumb, 'activeMenu' => $activeMenu, 'page' => $page, 'user' => $user, 'level' => $level]);
     }
 
-    public function ubah_simpan($id, Request $request)
+    public function update(Request $request, string $id)
     {
-        $user = UserModel::find($id);
+        $request->validate([
+            'username' => 'required|string|min:3|unique:m_user,username,' . $id . ',user_id',
+            'email' => 'required|string|max:100',
+            'password' => 'nullable|min:5',
+            'level_id' => 'required|integer',
+        ]);
 
-        $user->username = $request->username;
-        $user->nama = $request->nama;
-        $user->level_id = $request->level_id;
+        UserModel::find($id)->update([
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => $request->password ? bcrypt($request->password) : UserModel::find($id)->password,
+            'level_id' => $request->level_id,
+        ]);
 
-        $user->save();
-        return redirect('/user');
+        return redirect('/user')->with('success', 'User updated successfully.');
     }
 
-    public function hapus($id)
+    public function destroy(string $id)
     {
-        $user = UserModel::find($id);
-        $user->delete();
+        $check = UserModel::find($id);
+        if ($check) {
+            $check->delete();
+            return redirect('/user')->with('success', 'User deleted successfully.');
+        }
 
-        return redirect('/user');
+        try {
+            UserModel::find($id)->delete();
+            return redirect('/user')->with('success', 'User deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect('/user')->with('error', 'User not found.');
+        }
     }
+
+
 }
