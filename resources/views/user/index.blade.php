@@ -36,8 +36,8 @@
             <thead>
             <tr>
                 <th>No</th>
+                <th>Username</th>
                 <th>Nama</th>
-                <th>Email</th>
                 <th>Level</th>
                 <th>Aksi</th>
             </tr>
@@ -75,7 +75,7 @@
                     orderable: true,
                     searchable: true
                 }, {
-                    data: "name",
+                    data: "nama",
                     ClassName: "",
                     orderable: true,
                     searchable: true
