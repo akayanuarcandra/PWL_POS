@@ -2,9 +2,9 @@
 @section('content')
 <div class="card card-outline card-primary">
     <div class="card-header">
-        <h3 class="card-title">{{ $page->title }}</h3>'
+        <h3 class="card-title">{{ $page->title }}</h3>
         <div class="card-tools">
-            <a class="btn btn-sm btn-primary mt-1" href="{{ url('category/create') }}">Tambah</a>
+            <a class="btn btn-sm btn-primary mt-1" href="{{ url('level/create') }}">Tambah</a>
         </div>
     </div>
     <div class="card-body">
@@ -16,7 +16,7 @@
         @endif
         <table
             class="table table-bordered table-striped table-hover table-sm"
-            id="table_category"
+            id="table_level"
         >
             <thead>
             <tr>
@@ -34,10 +34,10 @@
 @push('js')
 <script>
     $(document).ready(function () {
-        const dataUser = $('#table_category').DataTable({
+        const dataUser = $('#table_level').DataTable({
             serverSide: true,
             ajax: {
-                "url": "{{ url('category/list') }}",
+                "url": "{{ url('level/list') }}",
                 "dataType": "json",
                 "type": "GET",
             },
@@ -48,12 +48,12 @@
                     orderable: false,
                     searchable: false
                 }, {
-                    data: "kategori_kode",
+                    data: "level_kode",
                     ClassName: "",
                     orderable: true,
                     searchable: true,
                 }, {
-                    data: "kategori_nama",
+                    data: "level_nama",
                     ClassName: "",
                     orderable: true,
                     searchable: true,
@@ -67,7 +67,7 @@
         });
     });
 
-    $('#category_id').change(function () {
+    $('#level_id').change(function () {
         dataUser.ajax.reload();
     });
 </script>

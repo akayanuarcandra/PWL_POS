@@ -2,72 +2,131 @@
 
 namespace App\Http\Controllers;
 
-use App\DataTables\KategoriDataTable;
 use App\Models\KategoriModel;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
+use Yajra\DataTables\DataTables;
 
 class KategoriController extends Controller
 {
-    public function index(KategoriDataTable $dataTable)
+    public function index()
     {
-        return $dataTable->render('kategori.index');
+        $breadcrumb = (object)[
+            'title' => 'Daftar Category',
+            'list' => ['Home', 'Category']
+        ];
+        $page = (object)[
+            'title' => 'Daftar category yang terdaftar dalam sistem',
+        ];
+        $activeMenu = 'category';
+        return view('kategori.index', [
+            'breadcrumb' => $breadcrumb,
+            'activeMenu' => $activeMenu,
+            'page' => $page,
+        ]);
     }
 
-//    public function create()
-//    {
-//        return view('kategori.create');
-//    }
-//
-//    public function store(Request $request)
-//    {
-//        KategoriModel::create([
-//            'kategori_kode' => $request->kodeKategori,
-//            'kategori_nama' => $request->namaKategori,
-//        ]);
-//        return redirect('/kategori');
-//    }
+    public function list(Request $request)
+    {
+        $categorys = KategoriModel::select('kategori_id', 'kategori_kode', 'kategori_nama')->get();
+
+        return DataTables::of($categorys)->addIndexColumn()->addColumn('action', function ($category) {
+            $btn = '<a href="/category/' . $category->category_id . '" class="btn btn-primary btn-sm">Detail</a>';
+            $btn = $btn . ' <a href="/category/' . $category->category_id . '/edit" class="btn btn-warning btn-sm">Edit</a>';
+            $btn .= '<form class="d-inline-block" method="POST" action="' .
+                url('/category/' . $category->category_id) . '">' . csrf_field() . method_field('DELETE') .
+                '<button type="submit" class="btn btn-danger btn-sm" onclick="return confirm(\'Are you sure to delete this data?\');" >Delete</button></form>';
+            return $btn;
+        })
+            ->rawColumns(['action'])
+            ->make();
+    }
 
     public function create()
     {
-        return view('kategori.create');
+        $breadcrumb = (object)[
+            'title' => 'Tambah Category',
+            'list' => ['Home', 'Category', 'Tambah']
+        ];
+        $page = (object)[
+            'title' => 'Tambah category baru',
+        ];
+        $activeMenu = 'category';
+
+        return view('category.create', ['breadcrumb' => $breadcrumb, 'activeMenu' => $activeMenu, 'page' => $page]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request)
     {
-        $validated = $request->validateWithBag('category', [
-            'kategori_kode' => 'bail|required|unique:m_kategori|max:255',
-            'kategori_nama' => 'required'
+        $request->validate([
+            'kategori_kode' => 'required|string|min:3|unique:m_kategori,kategori_kode',
+            'kategori_nama' => 'required|string|max:100',
         ]);
 
         KategoriModel::create([
-            'kategori_kode' => $validated['kategori_kode'],
-            'kategori_nama' => $validated['kategori_nama']
+            'kategori_kode' => $request->kategori_kode,
+            'kategori_nama' => $request->kategori_nama,
         ]);
 
-        return redirect('/kategori');
+        return redirect('/category')->with('success', 'Category created successfully.');
+    }
+
+    public function show(string $id)
+    {
+        $breadcrumb = (object)[
+            'title' => 'Detail Category',
+            'list' => ['Home', 'Category', 'Detail']
+        ];
+        $page = (object)[
+            'title' => 'Detail category',
+        ];
+        $activeMenu = 'category';
+        return view('category.show', ['breadcrumb' => $breadcrumb, 'activeMenu' => $activeMenu, 'page' => $page]);
+    }
+
+    public function edit(string $id)
+    {
+        $category = KategoriModel::find($id);
+
+        $breadcrumb = (object)[
+            'title' => 'Edit Category',
+            'list' => ['Home', 'Category', 'Edit']
+        ];
+        $page = (object)[
+            'title' => 'Edit category',
+        ];
+        $activeMenu = 'category';
+        return view('category.edit', ['breadcrumb' => $breadcrumb, 'activeMenu' => $activeMenu, 'page' => $page, 'category' => $category]);
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $request->validate([
+            'kategori__kode' => 'required|string|min:3|unique:m_kategori_,kategori__kode',
+            'kategori__nama' => 'required|string|max:100',
+        ]);
+
+        KategoriModel::find($id)->update([
+            'kategori_name' => $request->kategori_name,
+            'kategori_code' => $request->kategori_code,
+        ]);
+
+        return redirect('/category')->with('success', 'Category updated successfully.');
+    }
+
+    public function destroy(string $id)
+    {
+        $check = KategoriModel::find($id);
+        if (!$check) {
+            return redirect('/category')->with('error', 'Category not found.');
+        }
+
+        try {
+            KategoriModel::find($id)->delete();
+            return redirect('/category')->with('success', 'Category deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect('/category')->with('error', 'Category not found.');
+        }
     }
 
 
-    public function update($id) {
-        $data = KategoriModel::find($id);
-        return view('kategori.update', ['kategori' => $data]);
-    }
-
-    public function update_save(Request $request, $id) {
-        $data = KategoriModel::find($id);
-        $data->kategori_kode = $request->kodeKategori;
-        $data->kategori_nama = $request->namaKategori;
-        $data->save();
-
-        return redirect('/kategori');
-    }
-
-    public function delete($id) {
-        $data = KategoriModel::find($id);
-        $data->delete();
-
-        return redirect('/kategori');
-    }
 }

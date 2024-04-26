@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GoodsController;
 use App\Http\Controllers\KategoriController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\POSController;
@@ -29,4 +30,37 @@ Route::group(['prefix' => 'user'], function () {
     Route::get('/{id}/edit', [UserController::class, 'edit']);
     Route::put('/{id}', [UserController::class, 'update']);
     Route::delete('/{id}', [UserController::class, 'destroy']);
+});
+
+Route::group(['prefix' => 'level'], function () {
+    Route::get('/', [LevelController::class, 'index']);
+    Route::get('/list', [LevelController::class, 'list']);
+    Route::get('/create', [LevelController::class, 'create']);
+    Route::post('/', [LevelController::class, 'store']);
+    Route::get('/{id}', [LevelController::class, 'show']);
+    Route::get('/{id}/edit', [LevelController::class, 'edit']);
+    Route::put('/{id}', [LevelController::class, 'update']);
+    Route::delete('/{id}', [LevelController::class, 'destroy']);
+});
+
+Route::group(['prefix' => 'category'], function () {
+    Route::get('/', [KategoriController::class, 'index']);
+    Route::get('/list', [KategoriController::class, 'list']);
+    Route::get('/create', [KategoriController::class, 'create']);
+    Route::post('/', [KategoriController::class, 'store']);
+    Route::get('/{id}', [KategoriController::class, 'show']);
+    Route::get('/{id}/edit', [KategoriController::class, 'edit']);
+    Route::put('/{id}', [KategoriController::class, 'update']);
+    Route::delete('/{id}', [KategoriController::class, 'destroy']);
+});
+
+Route::group(['prefix' => 'item'], function () {
+    Route::get('/', [GoodsController::class, 'index']);
+    Route::get('/list', [GoodsController::class, 'list']);
+    Route::get('/create', [GoodsController::class, 'create']);
+    Route::post('/', [GoodsController::class, 'store']);
+    Route::get('/{id}', [GoodsController::class, 'show']);
+    Route::get('/{id}/edit', [GoodsController::class, 'edit']);
+    Route::put('/{id}', [GoodsController::class, 'update']);
+    Route::delete('/{id}', [GoodsController::class, 'destroy']);
 });
