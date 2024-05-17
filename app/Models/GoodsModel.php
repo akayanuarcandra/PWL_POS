@@ -18,6 +18,7 @@ class GoodsModel extends Model
         'harga_beli',
         'harga_jual',
         'kategori_id',
+        'image'
     ];
 
     public function kategori()
